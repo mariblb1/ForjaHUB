@@ -2,6 +2,8 @@ export const IPC = {
   // Dados
   LOAD_GAMES: 'data:load-games',
   REFRESH_CACHE: 'data:refresh-cache',
+  SELECT_AND_LOAD_FILE: 'data:select-and-load-file',
+  PARSE_CSV: 'data:parse-csv',
 
   // Launcher
   LAUNCH_EXE: 'launcher:run-exe',
@@ -13,5 +15,6 @@ export const IPC = {
   EXPORT_LOGS: 'analytics:export-logs',
 
   // Sistema
-  TOGGLE_FULLSCREEN: 'window:toggle-fullscreen'
+  TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
+  MINIMIZE_WINDOW: 'window:minimize'
 } as const

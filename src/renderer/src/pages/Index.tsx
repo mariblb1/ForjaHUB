@@ -1,8 +1,26 @@
-import forjaLogo from '../assets/forja-logo1.png'
+import { useState } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import { useGames } from '@/hooks/useGames'
+
+import forjaLogo from '@/assets/forja-logo1.png'
 import { Button } from '@/components/ui/button'
 import { Gamepad2, Monitor, Wifi, WifiOff } from 'lucide-react'
 
 const Index = () => {
+  const { data, isLoading, refetch } = useGames()
+  const [showCatalog, setShowCatalog] = useState(false)
+
+  const handleExplore = () => {
+    setShowCatalog(true)
+    refetch()
+  }
   return (
     <div className="min-h-screen forja-gradient-bg flex flex-col">
       {/* Header */}
@@ -57,9 +75,39 @@ const Index = () => {
         <Button
           size="lg"
           className="forja-gradient text-primary-foreground font-display text-lg px-10 animate-pulse-glow"
+          onClick={handleExplore}
         >
           Explorar Catálogo
         </Button>
+
+        {/* Tabela de jogos */}
+        {showCatalog && (
+          <div className="w-full max-w-3xl">
+            {isLoading && <p className="text-center text-muted-foreground">Carregando...</p>}
+            {data && data.games.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Título</TableHead>
+                    <TableHead>Gênero</TableHead>
+                    <TableHead>Modo</TableHead>
+                    <TableHead>Tipo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.games.map((game) => (
+                    <TableRow key={game.id}>
+                      <TableCell className="font-medium">{game.title}</TableCell>
+                      <TableCell>{game.genres?.join(', ')}</TableCell>
+                      <TableCell>{game.mode}</TableCell>
+                      <TableCell>{game.launchType}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Footer */}

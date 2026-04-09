@@ -78,7 +78,6 @@ function splitField(value: string | undefined): string[] {
 }
 
 function parseMode(value: string): 'singleplayer' | 'multiplayer' | 'coop' {
-  console.log(value)
   if (value == 'multiplayer' || value == 'coop' || value == 'singleplayer') return value
   throw new Error('Modo de jogo inválido')
 }

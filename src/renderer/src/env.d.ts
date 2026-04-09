@@ -1,16 +1,23 @@
-import { fetchFromLocal } from 'src/services/googleSheets'
 /// <reference types="vite/client" />
 import type { ForjaHubData } from '../../types/game'
 
 interface ForjaAPI {
-  loadDataJson: () => Promise<ForjaHubData>
-  fetchFromLocal: (path: string) => Promise<string>
+  selectAndLoadFile: () => Promise<ForjaHubData | null>
+  parseCsv: (csvText: string) => Promise<ForjaHubData>
+  minimizeWindow: () => void
+  toggleFullscreen: () => void
+  launchURL: (url: string) => void
 }
 
 declare global {
   interface Window {
-    forjaAPI: ForjaAPI
+    forjaAPI?: ForjaAPI
   }
+}
+
+declare module '*.png' {
+  const src: string
+  export default src
 }
 
 export {}

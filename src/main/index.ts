@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import { readFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -7,7 +7,6 @@ import { globalShortcut } from 'electron'
 import { IPC } from '../shared/channels'
 import { csvToForjaHubData } from '../services/csvParser'
 import * as path from 'path'
-import { create } from 'domain'
 //import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -113,13 +112,34 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle('fetch-local-csv', async (_event, csvPath: string) => {
-  const text = readFileSync(csvPath, 'utf-8')
-  return csvToForjaHubData(text)
+ipcMain.handle(IPC.SELECT_AND_LOAD_FILE, async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Selecionar ficheiro de dados',
+    filters: [
+      { name: 'Dados', extensions: ['json', 'csv'] },
+      { name: 'JSON', extensions: ['json'] },
+      { name: 'CSV', extensions: ['csv'] }
+    ],
+    properties: ['openFile']
+  })
+
+  if (canceled || filePaths.length === 0) return null
+
+  const filePath = filePaths[0]
+  const text = readFileSync(filePath, 'utf-8')
+
+  if (filePath.endsWith('.csv')) {
+    return csvToForjaHubData(text)
+  }
+
+  return JSON.parse(text)
 })
 
-ipcMain.handle('load-data-json', async () => {
-  const jsonPath = path.join(app.getPath('userData'), 'data.json')
-  const text = readFileSync(jsonPath, 'utf-8')
-  return JSON.parse(text)
+ipcMain.handle(IPC.PARSE_CSV, (_event, csvText: string) => {
+  return csvToForjaHubData(csvText)
+})
+
+ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {
+  const win = BrowserWindow.getFocusedWindow()
+  win?.minimize()
 })

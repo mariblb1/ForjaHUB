@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2024-06-01T12:00:00Z",
+  "games": [
+    {
+      "id": "Exemplo1",
+      "title": "Exemplo de Jogo Foda",
+      "subtitle": "Subtítulo do Jogo",
+      "description": "Jogo Foda",
+      "genres": ["Ação", "Aventura"],
+      "tags": ["2D", "Indie"],
+      "mode": "singleplayer",
+      "cover": "/assets/exemplo-cover.png",
+      "banner": "/assets/banners/exemplo-banner.png",
+      "gallery": [
+        { "type": "image", "url": "/assets/gallery/exemplo1.png", "caption": "Tela Inicial" },
+        {
+          "type": "video",
+          "url": "https://youtu.be/k5qLjkPREVU?si=icVaNcu91HKnQ2HN",
+          "caption": "Trailer Oficial"
+        }
+      ],
+      "studio": "Forja Games Studio",
+      "StudioLogo": "/assets/logos/forja-logo1.png",
+      "credits": [
+        { "role": "Desenvolvedor", "name": "Equipe Forja" },
+        { "role": "Designer", "name": "Designer Forja" }
+      ],
+      "launchType": "local",
+      "executablePath": "C:/Jogos/Exemplo1/Exemplo1.exe",
+      "year": 2026,
+      "featured": true,
+      "sortOrder": 1
+    }
+  ]
+}
