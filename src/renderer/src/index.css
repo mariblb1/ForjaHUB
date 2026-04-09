@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* FORJA Design System - Dark theme by default (arcade/kiosk) */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 0 85% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 0 70% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 85% 50%;
+
+    --radius: 0.5rem;
+
+    /* FORJA custom tokens */
+    --forja-red: 0 85% 50%;
+    --forja-red-glow: 0 90% 60%;
+    --forja-dark: 0 0% 7%;
+    --forja-dark-card: 0 0% 10%;
+    --forja-dark-surface: 0 0% 13%;
+    --forja-neutral: 0 0% 55%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 85% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 85% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rajdhani', sans-serif;
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .forja-glow {
+    box-shadow: 0 0 20px hsl(var(--forja-red) / 0.3),
+                0 0 60px hsl(var(--forja-red) / 0.1);
+  }
+
+  .forja-text-glow {
+    text-shadow: 0 0 10px hsl(var(--forja-red) / 0.5),
+                 0 0 30px hsl(var(--forja-red) / 0.2);
+  }
+
+  .forja-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--forja-red)) 0%,
+      hsl(var(--forja-red-glow)) 100%
+    );
+  }
+
+  .forja-gradient-bg {
+    background: radial-gradient(
+      ellipse at top left,
+      hsl(var(--forja-red) / 0.15) 0%,
+      hsl(var(--forja-dark)) 50%
+    );
+  }
+}
