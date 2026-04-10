@@ -14,11 +14,15 @@ import { Button } from '@/components/ui/button'
 import { Gamepad2, Monitor, Wifi, WifiOff } from 'lucide-react'
 
 const Index = () => {
-  const { data, isLoading, refetch } = useGames()
+  const { data, isLoading, isFetching, refetch } = useGames()
   const [showCatalog, setShowCatalog] = useState(false)
 
   const handleExplore = () => {
     setShowCatalog(true)
+    if (!data) refetch()
+  }
+
+  const handleRefreshCache = () => {
     refetch()
   }
   return (
@@ -35,8 +39,10 @@ const Index = () => {
             variant="outline"
             size="sm"
             className="border-border hover:border-primary hover:text-primary"
+            onClick={handleRefreshCache}
+            disabled={isFetching}
           >
-            Atualizar Cache
+            {isFetching ? 'Atualizando...' : 'Atualizar Cache'}
           </Button>
         </div>
       </header>
