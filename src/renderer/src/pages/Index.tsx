@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useGames } from '@/hooks/useGames'
 import type { Game } from '@/../../types/game'
 import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search } from 'lucide-react'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2 } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -17,65 +17,101 @@ const modeLabel = (mode: Game['mode']) => {
   return 'Single Player'
 }
 
-const GameCard = ({ game }: { game: Game }) => (
-  <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group relative">
-    {/* Capa */}
-    <div className="relative h-40 bg-muted overflow-hidden">
-      {game.cover ? (
-        <img
-          src={game.cover}
-          alt={game.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-          }}
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-          <Gamepad2 className="h-10 w-10 opacity-30" />
-        </div>
-      )}
-    </div>
+const GameCard = ({ game }: { game: Game }) => {
+  const [status, setStatus] = useState<'idle' | 'running' | 'error'>('idle')
 
-    {/* Info base */}
-    <div className="p-4 space-y-2">
-      <h3 className="font-display font-semibold text-foreground truncate">{game.title}</h3>
-      {game.genres && game.genres.length > 0 && (
-        <p className="text-xs text-muted-foreground truncate">{game.genres.join(' · ')}</p>
-      )}
-      <div className="flex items-center gap-1.5 text-xs text-primary">
-        {modeIcon(game.mode)}
-        <span>{modeLabel(game.mode)}</span>
+  useEffect(() => {
+    const unsubStatus = window.forjaAPI?.onGameStatus((s) => {
+      if (s === 'running') setStatus('running')
+      if (s === 'error') setStatus('error')
+    })
+    const unsubClosed = window.forjaAPI?.onGameClosed(() => setStatus('idle'))
+    return () => {
+      unsubStatus?.()
+      unsubClosed?.()
+    }
+  }, [])
+
+  const handleLaunch = () => {
+    if (game.launchType === 'web' && game.webUrl) {
+      window.forjaAPI?.launchURL(game.webUrl)
+    } else if (game.launchType === 'local' && game.executablePath) {
+      window.forjaAPI?.launchExe(game.executablePath)
+    }
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group relative">
+      {/* Capa */}
+      <div className="relative h-40 bg-muted overflow-hidden">
+        {game.cover ? (
+          <img
+            src={game.cover}
+            alt={game.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <Gamepad2 className="h-10 w-10 opacity-30" />
+          </div>
+        )}
       </div>
-    </div>
 
-    {/* Overlay com detalhes ao hover */}
-    <div className="absolute inset-0 bg-black/90 rounded-xl flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-      <h3 className="font-display font-bold text-white text-base">{game.title}</h3>
-      {game.subtitle && (
-        <p className="text-primary text-xs mb-2">{game.subtitle}</p>
-      )}
-      {game.description && (
-        <p className="text-gray-300 text-xs leading-relaxed line-clamp-3 mb-3">{game.description}</p>
-      )}
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="flex items-center gap-1 text-primary">
+      {/* Info base */}
+      <div className="p-4 space-y-2">
+        <h3 className="font-display font-semibold text-foreground truncate">{game.title}</h3>
+        {game.genres && game.genres.length > 0 && (
+          <p className="text-xs text-muted-foreground truncate">{game.genres.join(' · ')}</p>
+        )}
+        <div className="flex items-center gap-1.5 text-xs text-primary">
           {modeIcon(game.mode)}
-          {modeLabel(game.mode)}
-        </span>
-        {game.maxPlayers && (
-          <span className="text-gray-400">até {game.maxPlayers} jogadores</span>
-        )}
-        {game.year && (
-          <span className="text-gray-400">{game.year}</span>
-        )}
+          <span>{modeLabel(game.mode)}</span>
+        </div>
       </div>
-      {game.studio && (
-        <p className="text-gray-500 text-xs mt-2">{game.studio}</p>
-      )}
+
+      {/* Overlay com detalhes + botão jogar ao hover */}
+      <div className="absolute inset-0 bg-black/90 rounded-xl flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <h3 className="font-display font-bold text-white text-base">{game.title}</h3>
+        {game.subtitle && <p className="text-primary text-xs mb-2">{game.subtitle}</p>}
+        {game.description && (
+          <p className="text-gray-300 text-xs leading-relaxed line-clamp-3 mb-3">{game.description}</p>
+        )}
+        <div className="flex flex-wrap gap-2 text-xs mb-3">
+          <span className="flex items-center gap-1 text-primary">
+            {modeIcon(game.mode)}
+            {modeLabel(game.mode)}
+          </span>
+          {game.maxPlayers && <span className="text-gray-400">até {game.maxPlayers} jogadores</span>}
+          {game.year && <span className="text-gray-400">{game.year}</span>}
+        </div>
+        {game.studio && <p className="text-gray-500 text-xs mb-3">{game.studio}</p>}
+
+        <button
+          onClick={handleLaunch}
+          disabled={status === 'running'}
+          className={`flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-semibold transition-colors ${
+            status === 'running'
+              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+              : status === 'error'
+              ? 'bg-destructive/80 text-white hover:bg-destructive'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+          }`}
+        >
+          {status === 'running' ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> A jogar...</>
+          ) : status === 'error' ? (
+            <><Play className="h-4 w-4" /> Erro ao abrir</>
+          ) : game.launchType === 'web' ? (
+            <><Globe className="h-4 w-4" /> Jogar no browser</>
+          ) : (
+            <><Play className="h-4 w-4" /> Jogar</>
+          )}
+        </button>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const Index = () => {
   const { data, isLoading, isFetching, refetch } = useGames()

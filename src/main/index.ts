@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { spawn } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ipcMain, shell } from 'electron'
 import { globalShortcut } from 'electron'
@@ -148,6 +149,27 @@ ipcMain.handle(IPC.LOAD_CACHE, () => {
   const cachePath = path.join(app.getPath('userData'), 'data.json')
   if (!existsSync(cachePath)) return null
   return JSON.parse(readFileSync(cachePath, 'utf-8'))
+})
+
+ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
+  const win = BrowserWindow.getAllWindows()[0]
+
+  const child = spawn(exePath, [], { detached: true, stdio: 'ignore' })
+  child.unref()
+
+  child.on('spawn', () => {
+    win?.webContents.send(IPC.GAME_STATUS, 'running')
+  })
+
+  child.on('error', (err) => {
+    win?.webContents.send(IPC.GAME_STATUS, 'error')
+    console.error('[launcher] erro ao abrir exe:', err.message)
+  })
+
+  child.on('close', () => {
+    win?.webContents.send(IPC.GAME_CLOSED, null)
+    win?.webContents.send(IPC.GAME_STATUS, 'closed')
+  })
 })
 
 ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {

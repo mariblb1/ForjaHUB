@@ -27,7 +27,7 @@
         { "role": "Designer", "name": "Designer Forja" }
       ],
       "launchType": "local",
-      "executablePath": "C:/Jogos/Exemplo1/Exemplo1.exe",
+      "executablePath": "C://Windows/System32/calc.exe",
       "year": 2026,
       "featured": true,
       "sortOrder": 1

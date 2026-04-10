@@ -11,6 +11,7 @@ export const IPC = {
   LAUNCH_EXE: 'launcher:run-exe',
   LAUNCH_URL: 'launcher:open-url',
   GAME_STATUS: 'launcher:game-status',
+  GAME_CLOSED: 'launcher:game-closed',
 
   // Analytics
   LOG_EVENT: 'analytics:log-event',
