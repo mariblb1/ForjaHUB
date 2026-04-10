@@ -10,10 +10,10 @@
       "genres": ["Ação", "Aventura"],
       "tags": ["2D", "Indie"],
       "mode": "singleplayer",
-      "cover": "/assets/exemplo-cover.png",
-      "banner": "/assets/banners/exemplo-banner.png",
+      "cover": "/assets/exemplo-cover.jpg",
+      "banner": "/assets/banners/exemplo-banner.jpg",
       "gallery": [
-        { "type": "image", "url": "/assets/gallery/exemplo1.png", "caption": "Tela Inicial" },
+        { "type": "image", "url": "/assets/gallery/exemplo1.jpg", "caption": "Tela Inicial" },
         {
           "type": "video",
           "url": "https://youtu.be/k5qLjkPREVU?si=icVaNcu91HKnQ2HN",
