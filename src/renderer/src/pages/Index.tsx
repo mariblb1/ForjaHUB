@@ -3,7 +3,7 @@ import { useGames } from '@/hooks/useGames'
 import type { Game } from '@/../../types/game'
 import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords } from 'lucide-react'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -80,6 +80,12 @@ const GameCard = ({ game }: { game: Game }) => (
 const Index = () => {
   const { data, isLoading, isFetching, refetch } = useGames()
   const [showCatalog, setShowCatalog] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const filteredGames = data?.games.filter((g) => {
+    const q = search.toLowerCase()
+    return g.title.toLowerCase().includes(q) || g.studio.toLowerCase().includes(q)
+  }) ?? []
 
   const handleExplore = () => {
     setShowCatalog(true)
@@ -161,16 +167,28 @@ const Index = () => {
 
         {/* Grid de cards */}
         {showCatalog && (
-          <div className="w-full max-w-5xl">
+          <div className="w-full max-w-5xl space-y-4">
+            {/* Campo de busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou estúdio..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-card border border-border rounded-lg pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+              />
+            </div>
+
             {isLoading && <p className="text-center text-muted-foreground">Carregando...</p>}
-            {data && data.games.length > 0 && (
+            {filteredGames.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {data.games.map((game) => (
+                {filteredGames.map((game) => (
                   <GameCard key={game.id} game={game} />
                 ))}
               </div>
             )}
-            {data && data.games.length === 0 && (
+            {data && filteredGames.length === 0 && !isLoading && (
               <p className="text-center text-muted-foreground">Nenhum jogo encontrado.</p>
             )}
           </div>
