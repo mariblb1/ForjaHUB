@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ipcMain, shell } from 'electron'
 import { globalShortcut } from 'electron'
@@ -137,6 +137,17 @@ ipcMain.handle(IPC.SELECT_AND_LOAD_FILE, async () => {
 
 ipcMain.handle(IPC.PARSE_CSV, (_event, csvText: string) => {
   return csvToForjaHubData(csvText)
+})
+
+ipcMain.handle(IPC.SAVE_CACHE, (_event, data: unknown) => {
+  const cachePath = path.join(app.getPath('userData'), 'data.json')
+  writeFileSync(cachePath, JSON.stringify(data, null, 2), 'utf-8')
+})
+
+ipcMain.handle(IPC.LOAD_CACHE, () => {
+  const cachePath = path.join(app.getPath('userData'), 'data.json')
+  if (!existsSync(cachePath)) return null
+  return JSON.parse(readFileSync(cachePath, 'utf-8'))
 })
 
 ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {

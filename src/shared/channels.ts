@@ -4,6 +4,8 @@ export const IPC = {
   REFRESH_CACHE: 'data:refresh-cache',
   SELECT_AND_LOAD_FILE: 'data:select-and-load-file',
   PARSE_CSV: 'data:parse-csv',
+  SAVE_CACHE: 'data:save-cache',
+  LOAD_CACHE: 'data:load-cache',
 
   // Launcher
   LAUNCH_EXE: 'launcher:run-exe',
