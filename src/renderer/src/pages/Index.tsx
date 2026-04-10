@@ -81,10 +81,29 @@ const Index = () => {
   const { data, isLoading, isFetching, refetch } = useGames()
   const [showCatalog, setShowCatalog] = useState(false)
   const [search, setSearch] = useState('')
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const [selectedModes, setSelectedModes] = useState<string[]>([])
+  const [showAllGenres, setShowAllGenres] = useState(false)
+
+  const allGenres = Array.from(new Set(data?.games.flatMap((g) => g.genres ?? []) ?? []))
+  const allModes = ['singleplayer', 'multiplayer', 'coop']
+
+  const toggleGenre = (genre: string) =>
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    )
+
+  const toggleMode = (mode: string) =>
+    setSelectedModes((prev) =>
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
+    )
 
   const filteredGames = data?.games.filter((g) => {
     const q = search.toLowerCase()
-    return g.title.toLowerCase().includes(q) || g.studio.toLowerCase().includes(q)
+    const matchesSearch = g.title.toLowerCase().includes(q) || g.studio.toLowerCase().includes(q)
+    const matchesGenre = selectedGenres.length === 0 || selectedGenres.some((genre) => g.genres?.includes(genre))
+    const matchesMode = selectedModes.length === 0 || selectedModes.includes(g.mode)
+    return matchesSearch && matchesGenre && matchesMode
   }) ?? []
 
   const handleExplore = () => {
@@ -179,6 +198,51 @@ const Index = () => {
                 className="w-full bg-card border border-border rounded-lg pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>
+
+            {/* Pills de modalidade */}
+            <div className="flex flex-wrap gap-2">
+              {allModes.map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => toggleMode(mode)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border transition-colors ${
+                    selectedModes.includes(mode)
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-card text-muted-foreground border-border hover:border-primary/60'
+                  }`}
+                >
+                  {modeIcon(mode as Game['mode'])}
+                  {modeLabel(mode as Game['mode'])}
+                </button>
+              ))}
+            </div>
+
+            {/* Pills de género */}
+            {allGenres.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {(showAllGenres ? allGenres : allGenres.slice(0, 10)).map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => toggleGenre(genre)}
+                    className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                      selectedGenres.includes(genre)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-muted-foreground border-border hover:border-primary/60'
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+                {allGenres.length > 10 && (
+                  <button
+                    onClick={() => setShowAllGenres((prev) => !prev)}
+                    className="px-3 py-1 rounded-full text-xs border border-border text-muted-foreground hover:border-primary/60 transition-colors"
+                  >
+                    {showAllGenres ? 'ver menos' : `+${allGenres.length - 10} mais`}
+                  </button>
+                )}
+              </div>
+            )}
 
             {isLoading && <p className="text-center text-muted-foreground">Carregando...</p>}
             {filteredGames.length > 0 && (
