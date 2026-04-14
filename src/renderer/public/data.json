@@ -10,7 +10,7 @@
       "genres": ["Ação", "Aventura"],
       "tags": ["2D", "Indie"],
       "mode": "singleplayer",
-      "cover": "/assets/exemplo-cover.jpg",
+      "cover": "/assets/covers/jogo-foda.jpg",
       "banner": "/assets/banners/exemplo-banner.jpg",
       "gallery": [
         { "type": "image", "url": "/assets/gallery/exemplo1.jpg", "caption": "Tela Inicial" },
@@ -27,7 +27,7 @@
         { "role": "Designer", "name": "Designer Forja" }
       ],
       "launchType": "local",
-      "executablePath": "C://Windows/System32/calc.exe",
+      "executablePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Gorogoa\\Gorogoa.exe",
       "year": 2026,
       "featured": true,
       "sortOrder": 1

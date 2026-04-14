@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ipcMain, shell } from 'electron'
 import { globalShortcut } from 'electron'
@@ -64,8 +64,14 @@ ipcMain.handle(IPC.TOGGLE_FULLSCREEN, async () => {
 
 app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+Shift+M', () => {
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.minimize()
+    const win = BrowserWindow.getAllWindows()[0]
+    if (!win) return
+    if (win.isVisible()) {
+      win.minimize()
+    } else {
+      win.show()
+      win.focus()
+    }
   })
 })
 
@@ -153,22 +159,48 @@ ipcMain.handle(IPC.LOAD_CACHE, () => {
 
 ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
   const win = BrowserWindow.getAllWindows()[0]
+  const processName = path.basename(exePath)
 
   const child = spawn(exePath, [], { detached: true, stdio: 'ignore' })
   child.unref()
 
-  child.on('spawn', () => {
-    win?.webContents.send(IPC.GAME_STATUS, 'running')
-  })
-
   child.on('error', (err) => {
+    win?.show()
+    win?.focus()
     win?.webContents.send(IPC.GAME_STATUS, 'error')
     console.error('[launcher] erro ao abrir exe:', err.message)
   })
 
-  child.on('close', () => {
-    win?.webContents.send(IPC.GAME_CLOSED, null)
-    win?.webContents.send(IPC.GAME_STATUS, 'closed')
+  child.on('spawn', () => {
+    win?.webContents.send(IPC.GAME_STATUS, 'running')
+    setTimeout(() => win?.hide(), 1500)
+
+    let gameEverRunning = false
+    let notFoundCount = 0
+
+    const poll = setInterval(() => {
+      exec(`tasklist /FI "IMAGENAME eq ${processName}" /NH`, (_err, stdout) => {
+        const running = stdout.toLowerCase().includes(processName.toLowerCase())
+
+        if (running) {
+          gameEverRunning = true
+          notFoundCount = 0
+        } else if (gameEverRunning) {
+          // só conta ausência depois do jogo ter sido confirmado a correr
+          notFoundCount++
+          if (notFoundCount >= 2) {
+            clearInterval(poll)
+            win?.show()
+            win?.focus()
+            win?.webContents.send(IPC.GAME_CLOSED, null)
+            win?.webContents.send(IPC.GAME_STATUS, 'closed')
+          }
+        }
+      })
+    }, 3000)
+
+    // segurança: para o polling após 4 horas
+    setTimeout(() => clearInterval(poll), 4 * 60 * 60 * 1000)
   })
 })
 
