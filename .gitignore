@@ -4,3 +4,18 @@ out
 .DS_Store
 .eslintcache
 *.log*
+
+# Electron builder
+release/
+
+# Cache de dados local (gerado automaticamente pelo app)
+public/data.json
+
+# Variáveis de ambiente
+.env
+.env.*
+
+# Editor
+.vscode/settings.json
+*.suo
+*.user

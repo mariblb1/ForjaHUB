@@ -4,6 +4,7 @@ import type { Game } from '@/../../types/game'
 import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
 import { Lightbox } from '@/components/Lightbox'
+import { GameModal } from '@/components/GameModal'
 import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
@@ -18,7 +19,7 @@ const modeLabel = (mode: Game['mode']) => {
   return 'Single Player'
 }
 
-const GameCard = ({ game, onOpenGallery }: { game: Game; onOpenGallery: () => void }) => {
+const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGallery: () => void; onOpenModal: () => void }) => {
   const [status, setStatus] = useState<'idle' | 'running' | 'error'>('idle')
 
   useEffect(() => {
@@ -42,7 +43,10 @@ const GameCard = ({ game, onOpenGallery }: { game: Game; onOpenGallery: () => vo
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group relative">
+    <div
+      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group relative cursor-pointer"
+      onClick={onOpenModal}
+    >
       {/* Capa */}
       <div className="relative h-40 bg-muted overflow-hidden">
         {game.cover ? (
@@ -72,7 +76,10 @@ const GameCard = ({ game, onOpenGallery }: { game: Game; onOpenGallery: () => vo
       </div>
 
       {/* Overlay com detalhes + botão jogar ao hover */}
-      <div className="absolute inset-0 bg-black/90 rounded-xl flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div
+        className="absolute inset-0 bg-black/90 rounded-xl flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        onClick={onOpenModal}
+      >
         <h3 className="font-display font-bold text-white text-base">{game.title}</h3>
         {game.subtitle && <p className="text-primary text-xs mb-2">{game.subtitle}</p>}
         {game.description && (
@@ -101,7 +108,7 @@ const GameCard = ({ game, onOpenGallery }: { game: Game; onOpenGallery: () => vo
         </div>
 
         <button
-          onClick={handleLaunch}
+          onClick={(e) => { e.stopPropagation(); handleLaunch() }}
           disabled={status === 'running'}
           className={`flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-semibold transition-colors ${
             status === 'running'
@@ -134,6 +141,7 @@ const Index = () => {
   const [selectedModes, setSelectedModes] = useState<string[]>([])
   const [showAllGenres, setShowAllGenres] = useState(false)
   const [lightbox, setLightbox] = useState<{ game: Game; index: number } | null>(null)
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null)
 
   const allGenres = Array.from(new Set(data?.games.flatMap((g) => g.genres ?? []) ?? []))
   const allModes = ['singleplayer', 'multiplayer', 'coop']
@@ -302,6 +310,7 @@ const Index = () => {
                     key={game.id}
                     game={game}
                     onOpenGallery={() => setLightbox({ game, index: 0 })}
+                    onOpenModal={() => setSelectedGame(game)}
                   />
                 ))}
               </div>
@@ -317,6 +326,11 @@ const Index = () => {
       <footer className="text-center py-4 text-xs text-muted-foreground">
         FORJA Game Studio © {new Date().getFullYear()}
       </footer>
+
+      {/* Modal de jogo */}
+      {selectedGame && (
+        <GameModal game={selectedGame} onClose={() => setSelectedGame(null)} />
+      )}
 
       {/* Lightbox */}
       {lightbox && lightbox.game.gallery?.length > 0 && (
