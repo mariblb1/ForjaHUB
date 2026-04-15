@@ -228,6 +228,47 @@ ipcMain.handle(IPC.LOG_EVENT, (_event, type: string, gameId: string, gameTitle: 
   appendFileSync(logPath, line, 'utf-8')
 })
 
+ipcMain.handle(IPC.EXPORT_LOGS, async () => {
+  const logPath = path.join(app.getPath('userData'), 'events.log')
+  if (!existsSync(logPath)) return { success: false, reason: 'no_log' }
+
+  const lines = readFileSync(logPath, 'utf-8').split('\n').filter(Boolean)
+  const entries = lines.map((line) => {
+    const [timestamp, event, gameId, gameTitle, duration] = line.split(' | ').map((s) => s.trim())
+    return { timestamp, event, gameId, gameTitle, duration: duration ?? '' }
+  })
+
+  const win = BrowserWindow.getAllWindows()[0]
+  win?.setAlwaysOnTop(false)
+
+  const { canceled, filePath } = await dialog.showSaveDialog(win, {
+    title: 'Exportar logs',
+    defaultPath: `forja-logs-${new Date().toISOString().slice(0, 10)}`,
+    filters: [
+      { name: 'CSV', extensions: ['csv'] },
+      { name: 'JSON', extensions: ['json'] }
+    ]
+  })
+
+  win?.setAlwaysOnTop(true)
+
+  if (canceled || !filePath) return { success: false, reason: 'canceled' }
+
+  if (filePath.endsWith('.json')) {
+    writeFileSync(filePath, JSON.stringify(entries, null, 2), 'utf-8')
+  } else {
+    const header = 'timestamp,event,game_id,game_title,duration\n'
+    const rows = entries.map((e) =>
+      [e.timestamp, e.event, e.gameId, e.gameTitle, e.duration]
+        .map((v) => `"${(v ?? '').replace(/"/g, '""')}"`)
+        .join(',')
+    ).join('\n')
+    writeFileSync(filePath, header + rows, 'utf-8')
+  }
+
+  return { success: true }
+})
+
 ipcMain.handle(IPC.GET_GAME_STATS, () => {
   const logPath = path.join(app.getPath('userData'), 'events.log')
   if (!existsSync(logPath)) return {}

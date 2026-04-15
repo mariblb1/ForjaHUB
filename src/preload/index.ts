@@ -22,5 +22,6 @@ contextBridge.exposeInMainWorld('forjaAPI', {
   },
   logEvent: (type: string, gameId: string, gameTitle: string) =>
     ipcRenderer.invoke(IPC.LOG_EVENT, type, gameId, gameTitle),
-  getGameStats: () => ipcRenderer.invoke(IPC.GET_GAME_STATS) as Promise<Record<string, number>>
+  getGameStats: () => ipcRenderer.invoke(IPC.GET_GAME_STATS) as Promise<Record<string, number>>,
+  exportLogs: () => ipcRenderer.invoke(IPC.EXPORT_LOGS) as Promise<{ success: boolean; reason?: string }>
 })

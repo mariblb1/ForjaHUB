@@ -14,6 +14,7 @@ interface ForjaAPI {
   toggleFullscreen: () => void
   logEvent: (type: string, gameId: string, gameTitle: string) => Promise<void>
   getGameStats: () => Promise<Record<string, number>>
+  exportLogs: () => Promise<{ success: boolean; reason?: string }>
 }
 
 declare global {

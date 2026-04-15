@@ -5,7 +5,7 @@ import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
 import { Lightbox } from '@/components/Lightbox'
 import { GameModal } from '@/components/GameModal'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images } from 'lucide-react'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images, Download } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -204,6 +204,13 @@ const Index = () => {
               : <WifiOff className="h-4 w-4 text-destructive" />}
             {isOnline ? 'Online' : 'Offline'}
           </span>
+          <button
+            onClick={() => window.forjaAPI?.exportLogs()}
+            className="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-md hover:bg-white/5"
+            title="Exportar logs"
+          >
+            <Download className="h-4 w-4" />
+          </button>
           <Button
             variant="outline"
             size="sm"
