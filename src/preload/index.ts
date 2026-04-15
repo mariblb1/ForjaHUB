@@ -19,5 +19,7 @@ contextBridge.exposeInMainWorld('forjaAPI', {
     const handler = () => cb()
     ipcRenderer.on(IPC.GAME_CLOSED, handler)
     return () => ipcRenderer.removeListener(IPC.GAME_CLOSED, handler)
-  }
+  },
+  logEvent: (type: string, gameId: string, gameTitle: string) =>
+    ipcRenderer.invoke(IPC.LOG_EVENT, type, gameId, gameTitle)
 })

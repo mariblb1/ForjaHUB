@@ -35,6 +35,7 @@ const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGall
   }, [])
 
   const handleLaunch = () => {
+    window.forjaAPI?.logEvent('play_click', game.id, game.title)
     if (game.launchType === 'web' && game.webUrl) {
       window.forjaAPI?.launchURL(game.webUrl)
     } else if (game.launchType === 'local' && game.executablePath) {
@@ -136,6 +137,18 @@ const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGall
 const Index = () => {
   const { data, isLoading, isFetching, refetch } = useGames()
   const [showCatalog, setShowCatalog] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true)
+    const onOffline = () => setIsOnline(false)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
+  }, [])
   const [search, setSearch] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [selectedModes, setSelectedModes] = useState<string[]>([])
@@ -186,8 +199,10 @@ const Index = () => {
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Wifi className="h-4 w-4 text-primary" />
-            Online
+            {isOnline
+              ? <Wifi className="h-4 w-4 text-primary" />
+              : <WifiOff className="h-4 w-4 text-destructive" />}
+            {isOnline ? 'Online' : 'Offline'}
           </span>
           <Button
             variant="outline"

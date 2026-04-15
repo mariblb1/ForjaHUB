@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs'
 import { spawn, exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ipcMain, shell } from 'electron'
@@ -207,4 +207,11 @@ ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
 ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {
   const win = BrowserWindow.getFocusedWindow()
   win?.minimize()
+})
+
+ipcMain.handle(IPC.LOG_EVENT, (_event, type: string, gameId: string, gameTitle: string) => {
+  const logPath = path.join(app.getPath('userData'), 'events.log')
+  const timestamp = new Date().toISOString()
+  const line = `${timestamp} | ${type} | ${gameId} | ${gameTitle}\n`
+  appendFileSync(logPath, line, 'utf-8')
 })

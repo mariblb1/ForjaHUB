@@ -12,6 +12,7 @@ interface ForjaAPI {
   onGameClosed: (cb: () => void) => () => void
   minimizeWindow: () => void
   toggleFullscreen: () => void
+  logEvent: (type: string, gameId: string, gameTitle: string) => Promise<void>
 }
 
 declare global {

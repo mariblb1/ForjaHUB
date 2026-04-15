@@ -30,6 +30,8 @@ export function GameModal({ game, onClose }: GameModalProps) {
   const gallery = game.gallery ?? []
 
   useEffect(() => {
+    window.forjaAPI?.logEvent('modal_open', game.id, game.title)
+
     const unsubStatus = window.forjaAPI?.onGameStatus((s) => {
       if (s === 'running') setStatus('running')
       if (s === 'error') setStatus('error')
@@ -47,6 +49,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
   }, [])
 
   const handleLaunch = () => {
+    window.forjaAPI?.logEvent('play_click', game.id, game.title)
     if (game.launchType === 'web' && game.webUrl) {
       window.forjaAPI?.launchURL(game.webUrl)
     } else if (game.launchType === 'local' && game.executablePath) {
