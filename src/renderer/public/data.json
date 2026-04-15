@@ -16,7 +16,12 @@
         { "type": "image", "url": "/assets/gallery/exemplo1.jpg", "caption": "Tela Inicial" },
         {
           "type": "video",
-          "url": "https://youtu.be/k5qLjkPREVU?si=icVaNcu91HKnQ2HN",
+          "url": "https://www.youtube-nocookie.com/embed/k5qLjkPREVU?autoplay=1",
+          "caption": "Trailer Oficial"
+        },
+        {
+          "type": "video",
+          "url": "/assets/gallery/trailer.mp4",
           "caption": "Trailer Oficial"
         }
       ],

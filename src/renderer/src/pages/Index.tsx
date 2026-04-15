@@ -3,7 +3,8 @@ import { useGames } from '@/hooks/useGames'
 import type { Game } from '@/../../types/game'
 import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2 } from 'lucide-react'
+import { Lightbox } from '@/components/Lightbox'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -17,7 +18,7 @@ const modeLabel = (mode: Game['mode']) => {
   return 'Single Player'
 }
 
-const GameCard = ({ game }: { game: Game }) => {
+const GameCard = ({ game, onOpenGallery }: { game: Game; onOpenGallery: () => void }) => {
   const [status, setStatus] = useState<'idle' | 'running' | 'error'>('idle')
 
   useEffect(() => {
@@ -87,6 +88,18 @@ const GameCard = ({ game }: { game: Game }) => {
         </div>
         {game.studio && <p className="text-gray-500 text-xs mb-3">{game.studio}</p>}
 
+        <div className="flex gap-2 mb-2">
+          {game.gallery && game.gallery.length > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onOpenGallery() }}
+              className="flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <Images className="h-3.5 w-3.5" />
+              Galeria ({game.gallery.length})
+            </button>
+          )}
+        </div>
+
         <button
           onClick={handleLaunch}
           disabled={status === 'running'}
@@ -120,6 +133,7 @@ const Index = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [selectedModes, setSelectedModes] = useState<string[]>([])
   const [showAllGenres, setShowAllGenres] = useState(false)
+  const [lightbox, setLightbox] = useState<{ game: Game; index: number } | null>(null)
 
   const allGenres = Array.from(new Set(data?.games.flatMap((g) => g.genres ?? []) ?? []))
   const allModes = ['singleplayer', 'multiplayer', 'coop']
@@ -284,7 +298,11 @@ const Index = () => {
             {filteredGames.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredGames.map((game) => (
-                  <GameCard key={game.id} game={game} />
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    onOpenGallery={() => setLightbox({ game, index: 0 })}
+                  />
                 ))}
               </div>
             )}
@@ -299,6 +317,15 @@ const Index = () => {
       <footer className="text-center py-4 text-xs text-muted-foreground">
         FORJA Game Studio © {new Date().getFullYear()}
       </footer>
+
+      {/* Lightbox */}
+      {lightbox && lightbox.game.gallery?.length > 0 && (
+        <Lightbox
+          items={lightbox.game.gallery}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   )
 }
