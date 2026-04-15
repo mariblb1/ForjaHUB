@@ -157,7 +157,7 @@ ipcMain.handle(IPC.LOAD_CACHE, () => {
   return JSON.parse(readFileSync(cachePath, 'utf-8'))
 })
 
-ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
+ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string, gameId: string, gameTitle: string) => {
   const win = BrowserWindow.getAllWindows()[0]
   const processName = path.basename(exePath)
 
@@ -172,6 +172,7 @@ ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
   })
 
   child.on('spawn', () => {
+    const launchTime = Date.now()
     win?.webContents.send(IPC.GAME_STATUS, 'running')
     setTimeout(() => win?.hide(), 1500)
 
@@ -186,10 +187,21 @@ ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string) => {
           gameEverRunning = true
           notFoundCount = 0
         } else if (gameEverRunning) {
-          // só conta ausência depois do jogo ter sido confirmado a correr
           notFoundCount++
           if (notFoundCount >= 2) {
             clearInterval(poll)
+
+            const seconds = Math.round((Date.now() - launchTime) / 1000)
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0')
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')
+            const s = String(seconds % 60).padStart(2, '0')
+            const logPath = path.join(app.getPath('userData'), 'events.log')
+            appendFileSync(
+              logPath,
+              `${new Date().toISOString()} | session_end | ${gameId} | ${gameTitle} | ${h}:${m}:${s}\n`,
+              'utf-8'
+            )
+
             win?.show()
             win?.focus()
             win?.webContents.send(IPC.GAME_CLOSED, null)
@@ -214,4 +226,25 @@ ipcMain.handle(IPC.LOG_EVENT, (_event, type: string, gameId: string, gameTitle: 
   const timestamp = new Date().toISOString()
   const line = `${timestamp} | ${type} | ${gameId} | ${gameTitle}\n`
   appendFileSync(logPath, line, 'utf-8')
+})
+
+ipcMain.handle(IPC.GET_GAME_STATS, () => {
+  const logPath = path.join(app.getPath('userData'), 'events.log')
+  if (!existsSync(logPath)) return {}
+
+  const totals: Record<string, number> = {}
+  const lines = readFileSync(logPath, 'utf-8').split('\n').filter(Boolean)
+
+  for (const line of lines) {
+    const parts = line.split(' | ')
+    if (parts[1]?.trim() !== 'session_end') continue
+    const gameId = parts[2]?.trim()
+    const duration = parts[4]?.trim() // HH:MM:SS
+    if (!gameId || !duration) continue
+    const [h, m, s] = duration.split(':').map(Number)
+    if ([h, m, s].some(isNaN)) continue
+    totals[gameId] = (totals[gameId] ?? 0) + h * 3600 + m * 60 + s
+  }
+
+  return totals
 })

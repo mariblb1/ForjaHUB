@@ -93,7 +93,7 @@ export function Lightbox({ items, initialIndex = 0, onClose }: LightboxProps) {
     >
       {/* Fechar */}
       <button
-        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors p-3 rounded-xl hover:bg-white/10"
         onClick={onClose}
       >
         <X className="h-7 w-7" />

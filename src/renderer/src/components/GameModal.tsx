@@ -1,9 +1,29 @@
 import { useEffect, useState } from 'react'
-import type { Game } from '../../../../types/game'
+import type { Game } from '@/../../types/game'
 import { Lightbox } from './Lightbox'
 import {
-  X, Play, Globe, Loader2, Images, ChevronLeft, ChevronRight, Gamepad2, User, Users, Swords
+  X,
+  Play,
+  Globe,
+  Loader2,
+  Images,
+  ChevronLeft,
+  ChevronRight,
+  Gamepad2,
+  User,
+  Users,
+  Swords,
+  Clock
 } from 'lucide-react'
+
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
 
 interface GameModalProps {
   game: Game
@@ -26,10 +46,15 @@ export function GameModal({ game, onClose }: GameModalProps) {
   const [status, setStatus] = useState<'idle' | 'running' | 'error'>('idle')
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [totalSeconds, setTotalSeconds] = useState<number | null>(null)
 
   const gallery = game.gallery ?? []
 
   useEffect(() => {
+    window.forjaAPI
+      ?.getGameStats?.()
+      ?.then((stats) => setTotalSeconds(stats[game.id] ?? 0))
+      ?.catch(() => setTotalSeconds(0))
     window.forjaAPI?.logEvent('modal_open', game.id, game.title)
 
     const unsubStatus = window.forjaAPI?.onGameStatus((s) => {
@@ -53,7 +78,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
     if (game.launchType === 'web' && game.webUrl) {
       window.forjaAPI?.launchURL(game.webUrl)
     } else if (game.launchType === 'local' && game.executablePath) {
-      window.forjaAPI?.launchExe(game.executablePath)
+      window.forjaAPI?.launchExe(game.executablePath, game.id, game.title)
     }
   }
 
@@ -65,10 +90,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
@@ -76,8 +98,8 @@ export function GameModal({ game, onClose }: GameModalProps) {
           className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Fechar */}
-          <div className="flex items-start justify-between p-5 pb-0">
+          {/* Cabeçalho */}
+          <div className="flex items-start justify-between p-5 pb-0 sticky top-0 bg-card z-10 rounded-t-2xl">
             <div>
               <h2 className="font-display font-bold text-xl text-foreground">{game.title}</h2>
               {game.subtitle && <p className="text-primary text-sm">{game.subtitle}</p>}
@@ -89,13 +111,21 @@ export function GameModal({ game, onClose }: GameModalProps) {
                 {game.maxPlayers && <span>até {game.maxPlayers} jogadores</span>}
                 {game.year && <span>{game.year}</span>}
                 {game.genres?.map((g) => (
-                  <span key={g} className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{g}</span>
+                  <span key={g} className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    {g}
+                  </span>
                 ))}
+                {totalSeconds !== null && totalSeconds > 0 && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {formatDuration(totalSeconds)} jogados
+                  </span>
+                )}
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1"
+              className="text-muted-foreground hover:text-foreground transition-colors ml-4 p-2 rounded-lg hover:bg-white/5 shrink-0"
             >
               <X className="h-5 w-5" />
             </button>
@@ -112,7 +142,9 @@ export function GameModal({ game, onClose }: GameModalProps) {
                       alt={currentMedia.caption}
                       className="w-full h-full object-cover cursor-pointer"
                       onClick={() => setLightboxOpen(true)}
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
                     />
                   ) : (
                     <div
@@ -121,7 +153,9 @@ export function GameModal({ game, onClose }: GameModalProps) {
                     >
                       <Play className="h-12 w-12 text-white/60" />
                       {currentMedia.caption && (
-                        <span className="absolute bottom-3 text-white/60 text-xs">{currentMedia.caption}</span>
+                        <span className="absolute bottom-3 text-white/60 text-xs">
+                          {currentMedia.caption}
+                        </span>
                       )}
                     </div>
                   )}
@@ -130,13 +164,19 @@ export function GameModal({ game, onClose }: GameModalProps) {
                   {gallery.length > 1 && (
                     <>
                       <button
-                        onClick={(e) => { e.stopPropagation(); galleryPrev() }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          galleryPrev()
+                        }}
                         className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); galleryNext() }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          galleryNext()
+                        }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <ChevronRight className="h-5 w-5" />
@@ -145,7 +185,10 @@ export function GameModal({ game, onClose }: GameModalProps) {
                         {gallery.map((_, i) => (
                           <button
                             key={i}
-                            onClick={(e) => { e.stopPropagation(); setGalleryIndex(i) }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setGalleryIndex(i)
+                            }}
                             className={`w-1.5 h-1.5 rounded-full transition-colors ${i === galleryIndex ? 'bg-white' : 'bg-white/40'}`}
                           />
                         ))}
@@ -177,18 +220,26 @@ export function GameModal({ game, onClose }: GameModalProps) {
                 status === 'running'
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'
                   : status === 'error'
-                  ? 'bg-destructive/80 text-white hover:bg-destructive'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    ? 'bg-destructive/80 text-white hover:bg-destructive'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
             >
               {status === 'running' ? (
-                <><Loader2 className="h-5 w-5 animate-spin" /> A jogar...</>
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" /> A jogar...
+                </>
               ) : status === 'error' ? (
-                <><Play className="h-5 w-5" /> Erro ao abrir</>
+                <>
+                  <Play className="h-5 w-5" /> Erro ao abrir
+                </>
               ) : game.launchType === 'web' ? (
-                <><Globe className="h-5 w-5" /> Jogar no browser</>
+                <>
+                  <Globe className="h-5 w-5" /> Jogar no browser
+                </>
               ) : (
-                <><Play className="h-5 w-5" /> Jogar</>
+                <>
+                  <Play className="h-5 w-5" /> Jogar
+                </>
               )}
             </button>
 
@@ -203,7 +254,10 @@ export function GameModal({ game, onClose }: GameModalProps) {
                 {game.tags && game.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1">
                     {game.tags.map((tag) => (
-                      <span key={tag} className="text-xs bg-card border border-border px-2 py-0.5 rounded-full text-muted-foreground">
+                      <span
+                        key={tag}
+                        className="text-xs bg-card border border-border px-2 py-0.5 rounded-full text-muted-foreground"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -226,9 +280,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
                     <p className="text-xs text-muted-foreground">Sem créditos.</p>
                   )}
                 </div>
-                {game.studio && (
-                  <p className="text-xs text-primary pt-1">{game.studio}</p>
-                )}
+                {game.studio && <p className="text-xs text-primary pt-1">{game.studio}</p>}
               </div>
             </div>
           </div>

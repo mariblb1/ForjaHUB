@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('forjaAPI', {
   minimizeWindow: () => ipcRenderer.invoke(IPC.MINIMIZE_WINDOW),
   toggleFullscreen: () => ipcRenderer.invoke(IPC.TOGGLE_FULLSCREEN),
   launchURL: (url: string) => ipcRenderer.invoke(IPC.LAUNCH_URL, url),
-  launchExe: (exePath: string) => ipcRenderer.invoke(IPC.LAUNCH_EXE, exePath),
+  launchExe: (exePath: string, gameId: string, gameTitle: string) => ipcRenderer.invoke(IPC.LAUNCH_EXE, exePath, gameId, gameTitle),
   onGameStatus: (cb: (status: string) => void) => {
     const handler = (_: Electron.IpcRendererEvent, status: string) => cb(status)
     ipcRenderer.on(IPC.GAME_STATUS, handler)
@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('forjaAPI', {
     return () => ipcRenderer.removeListener(IPC.GAME_CLOSED, handler)
   },
   logEvent: (type: string, gameId: string, gameTitle: string) =>
-    ipcRenderer.invoke(IPC.LOG_EVENT, type, gameId, gameTitle)
+    ipcRenderer.invoke(IPC.LOG_EVENT, type, gameId, gameTitle),
+  getGameStats: () => ipcRenderer.invoke(IPC.GET_GAME_STATS) as Promise<Record<string, number>>
 })

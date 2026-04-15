@@ -16,6 +16,7 @@ export const IPC = {
   // Analytics
   LOG_EVENT: 'analytics:log-event',
   EXPORT_LOGS: 'analytics:export-logs',
+  GET_GAME_STATS: 'analytics:get-game-stats',
 
   // Sistema
   TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',

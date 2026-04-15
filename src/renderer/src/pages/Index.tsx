@@ -39,7 +39,7 @@ const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGall
     if (game.launchType === 'web' && game.webUrl) {
       window.forjaAPI?.launchURL(game.webUrl)
     } else if (game.launchType === 'local' && game.executablePath) {
-      window.forjaAPI?.launchExe(game.executablePath)
+      window.forjaAPI?.launchExe(game.executablePath, game.id, game.title)
     }
   }
 
