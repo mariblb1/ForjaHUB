@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useGames } from '@/hooks/useGames'
+import { useGamepad } from '@/hooks/useGamepad'
 import type { Game } from '@/../../types/game'
 import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
@@ -45,8 +46,11 @@ const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGall
 
   return (
     <div
+      data-card
+      tabIndex={0}
       className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group relative cursor-pointer"
       onClick={onOpenModal}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onOpenModal() } }}
     >
       {/* Capa */}
       <div className="relative h-40 bg-muted overflow-hidden">
@@ -138,6 +142,13 @@ const Index = () => {
   const { data, isLoading, isFetching, refetch } = useGames()
   const [showCatalog, setShowCatalog] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const exploreRef = useRef<HTMLButtonElement>(null)
+  const showCatalogRef = useRef(false)
+  useGamepad()
+
+  // Foca o botão Explorar ao arrancar para o gamepad poder interagir imediatamente
+  useEffect(() => { exploreRef.current?.focus() }, [])
 
   useEffect(() => {
     const onOnline = () => setIsOnline(true)
@@ -177,7 +188,67 @@ const Index = () => {
     return matchesSearch && matchesGenre && matchesMode
   }) ?? []
 
+  // Navegação por setas
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) return
+
+      const active = document.activeElement as HTMLElement
+      const tag = active?.tagName?.toLowerCase() ?? ''
+      if (tag === 'input' || tag === 'select' || tag === 'textarea') return
+
+      // Navegação na página inicial entre botões [data-landing]
+      if (!showCatalogRef.current) {
+        const btns = Array.from(document.querySelectorAll<HTMLElement>('[data-landing]'))
+        if (!btns.length) return
+        const idx = btns.indexOf(active)
+        if (idx === -1) {
+          e.preventDefault()
+          btns[0]?.focus()
+          return
+        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          btns[(idx + 1) % btns.length]?.focus()
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault()
+          btns[(idx - 1 + btns.length) % btns.length]?.focus()
+        }
+        return
+      }
+
+      // Navegação no grid de cards
+      const grid = gridRef.current
+      if (!grid) return
+      const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-card]'))
+      if (!cards.length) return
+
+      const idx = cards.indexOf(active)
+      if (idx === -1) {
+        if (active && !grid.contains(active) && active !== document.body && active.tagName !== 'BODY') return
+        e.preventDefault()
+        cards[0]?.focus()
+        return
+      }
+
+      const firstTop = cards[0].getBoundingClientRect().top
+      const firstInRow2 = cards.findIndex(c => c.getBoundingClientRect().top > firstTop)
+      const numCols = firstInRow2 === -1 ? cards.length : firstInRow2
+      let next = idx
+      if (e.key === 'ArrowRight') next = Math.min(idx + 1, cards.length - 1)
+      else if (e.key === 'ArrowLeft') next = Math.max(idx - 1, 0)
+      else if (e.key === 'ArrowDown') next = Math.min(idx + numCols, cards.length - 1)
+      else if (e.key === 'ArrowUp') next = Math.max(idx - numCols, 0)
+
+      e.preventDefault()
+      cards[next]?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const handleExplore = () => {
+    showCatalogRef.current = true
     setShowCatalog(true)
     if (!data) refetch()
   }
@@ -205,17 +276,21 @@ const Index = () => {
             {isOnline ? 'Online' : 'Offline'}
           </span>
           <button
+            data-landing
             onClick={() => window.forjaAPI?.exportLogs()}
+            onKeyDown={(e) => { if (e.key === 'Enter') window.forjaAPI?.exportLogs() }}
             className="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-md hover:bg-white/5"
             title="Exportar logs"
           >
             <Download className="h-4 w-4" />
           </button>
           <Button
+            data-landing
             variant="outline"
             size="sm"
             className="border-border hover:border-primary hover:text-primary"
             onClick={handleRefreshCache}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleRefreshCache() }}
             disabled={isFetching}
           >
             {isFetching ? 'Atualizando...' : 'Atualizar Cache'}
@@ -257,9 +332,12 @@ const Index = () => {
         )}
 
         <Button
+          ref={exploreRef}
+          data-landing
           size="lg"
           className="forja-gradient text-primary-foreground font-display text-lg px-10 animate-pulse-glow"
           onClick={handleExplore}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleExplore() }}
         >
           Explorar Catálogo
         </Button>
@@ -326,7 +404,7 @@ const Index = () => {
 
             {isLoading && <p className="text-center text-muted-foreground">Carregando...</p>}
             {filteredGames.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredGames.map((game) => (
                   <GameCard
                     key={game.id}

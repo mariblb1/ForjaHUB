@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Game } from '@/../../types/game'
 import { Lightbox } from './Lightbox'
 import {
@@ -49,6 +49,14 @@ export function GameModal({ game, onClose }: GameModalProps) {
   const [totalSeconds, setTotalSeconds] = useState<number | null>(null)
 
   const gallery = game.gallery ?? []
+  const galleryRef = useRef<HTMLDivElement>(null)
+  const playBtnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    // Defer focus para não apanhar o Enter que abriu o modal
+    const t = setTimeout(() => (gallery.length > 0 ? galleryRef.current : playBtnRef.current)?.focus(), 0)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     window.forjaAPI
@@ -63,7 +71,17 @@ export function GameModal({ game, onClose }: GameModalProps) {
     })
     const unsubClosed = window.forjaAPI?.onGameClosed(() => setStatus('idle'))
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') { onClose(); return }
+
+      const onGallery = document.activeElement === galleryRef.current
+      const onPlay = document.activeElement === playBtnRef.current
+
+      if (e.key === 'ArrowLeft'  && onGallery) { e.preventDefault(); galleryPrev() }
+      if (e.key === 'ArrowRight' && onGallery) { e.preventDefault(); galleryNext() }
+      if (e.key === 'ArrowDown'  && onGallery) { e.preventDefault(); playBtnRef.current?.focus() }
+      if (e.key === 'ArrowUp'    && onPlay)    { e.preventDefault(); galleryRef.current?.focus() }
+      if (e.key === 'Enter'      && onGallery) { setLightboxOpen(true) }
+      if (e.key === 'Enter'      && onPlay)    { playBtnRef.current?.click() }
     }
     window.addEventListener('keydown', handleKey)
     return () => {
@@ -133,7 +151,11 @@ export function GameModal({ game, onClose }: GameModalProps) {
 
           <div className="p-5 space-y-4">
             {/* Galeria */}
-            <div className="relative bg-muted rounded-xl overflow-hidden aspect-video group">
+            <div
+              ref={galleryRef}
+              tabIndex={gallery.length > 0 ? 0 : -1}
+              className="relative bg-muted rounded-xl overflow-hidden aspect-video group outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
               {gallery.length > 0 ? (
                 <>
                   {currentMedia.type === 'image' ? (
@@ -214,6 +236,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
 
             {/* Botão Jogar */}
             <button
+              ref={playBtnRef}
               onClick={handleLaunch}
               disabled={status === 'running'}
               className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-base font-display font-semibold transition-colors ${
