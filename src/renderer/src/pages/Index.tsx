@@ -225,7 +225,8 @@ const Index = () => {
 
       const idx = cards.indexOf(active)
       if (idx === -1) {
-        if (active && !grid.contains(active) && active !== document.body && active.tagName !== 'BODY') return
+        // Não entra no grid se o foco está dentro do modal
+        if (active?.closest('[data-modal]')) return
         e.preventDefault()
         cards[0]?.focus()
         return

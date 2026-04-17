@@ -113,6 +113,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
         <div
+          data-modal
           className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
