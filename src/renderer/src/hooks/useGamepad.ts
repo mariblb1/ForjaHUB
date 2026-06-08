@@ -6,11 +6,13 @@ const REPEAT_INTERVAL = 100
 const DEDUP_MS = 60  // janela para ignorar duplicados (botão + eixo ao mesmo tempo)
 
 const BUTTON_KEYS: Record<number, string> = {
-  0: 'Enter',    // A (Xbox) / Cross/X (PS)
-  1: 'Escape',   // B (Xbox) / Circle/O (PS)
-  2: 'Enter',    // X (Xbox) / Square (PS)
-  3: 'Escape',   // Y (Xbox) / Triangle (PS)
-  9: 'Enter',    // Start / Options
+  0: 'Enter',        // A (Xbox) / Cross/X (PS)
+  1: 'Escape',       // B (Xbox) / Circle/O (PS)
+  2: 'Enter',        // X (Xbox) / Square (PS)
+  3: 'Escape',       // Y (Xbox) / Triangle (PS)
+  4: 'BumperLeft',   // LB (Xbox) / L1 (PS)
+  5: 'BumperRight',  // RB (Xbox) / R1 (PS)
+  9: 'Enter',        // Start / Options
   12: 'ArrowUp',
   13: 'ArrowDown',
   14: 'ArrowLeft',

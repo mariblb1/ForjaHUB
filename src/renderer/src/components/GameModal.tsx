@@ -78,6 +78,8 @@ export function GameModal({ game, onClose }: GameModalProps) {
 
       if (e.key === 'ArrowLeft'  && onGallery) { e.preventDefault(); galleryPrev() }
       if (e.key === 'ArrowRight' && onGallery) { e.preventDefault(); galleryNext() }
+      if (e.key === 'BumperLeft')  { e.preventDefault(); galleryPrev() }
+      if (e.key === 'BumperRight') { e.preventDefault(); galleryNext() }
       if (e.key === 'ArrowDown'  && onGallery) { e.preventDefault(); playBtnRef.current?.focus() }
       if (e.key === 'ArrowUp'    && onPlay)    { e.preventDefault(); galleryRef.current?.focus() }
       if (e.key === 'Enter'      && onGallery) { setLightboxOpen(true) }
