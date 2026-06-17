@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { GameMedia } from '../../../../types/game'
+import type { GameMedia } from '../../../types/game'
 import { X, ChevronLeft, ChevronRight, Film } from 'lucide-react'
 
 interface LightboxProps {

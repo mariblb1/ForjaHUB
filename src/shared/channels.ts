@@ -20,5 +20,6 @@ export const IPC = {
 
   // Sistema
   TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
-  MINIMIZE_WINDOW: 'window:minimize'
+  MINIMIZE_WINDOW: 'window:minimize',
+  QUIT_APP: 'window:quit'
 } as const

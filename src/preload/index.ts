@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('forjaAPI', {
   saveCache: (data: unknown) => ipcRenderer.invoke(IPC.SAVE_CACHE, data),
   loadCache: () => ipcRenderer.invoke(IPC.LOAD_CACHE),
   minimizeWindow: () => ipcRenderer.invoke(IPC.MINIMIZE_WINDOW),
+  quitApp: () => ipcRenderer.invoke(IPC.QUIT_APP),
   toggleFullscreen: () => ipcRenderer.invoke(IPC.TOGGLE_FULLSCREEN),
   launchURL: (url: string) => ipcRenderer.invoke(IPC.LAUNCH_URL, url),
   launchExe: (exePath: string, gameId: string, gameTitle: string) => ipcRenderer.invoke(IPC.LAUNCH_EXE, exePath, gameId, gameTitle),

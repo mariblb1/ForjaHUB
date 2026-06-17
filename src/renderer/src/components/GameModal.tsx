@@ -131,7 +131,7 @@ export function GameModal({ game, onClose }: GameModalProps) {
                 </span>
                 {game.maxPlayers && <span>até {game.maxPlayers} jogadores</span>}
                 {game.year && <span>{game.year}</span>}
-                {game.genres?.map((g) => (
+                {game.genre?.map((g) => (
                   <span key={g} className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                     {g}
                   </span>

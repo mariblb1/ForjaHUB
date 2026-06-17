@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: forja-hub
+productName: ForjaHUB
 directories:
   buildResources: build
 files:
@@ -9,10 +9,12 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-asarUnpack:
-  - resources/**
+asar: false
 win:
-  executableName: forja-hub
+  executableName: ForjaHUB
+  target:
+    - target: zip
+      arch: x64
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -41,5 +43,5 @@ npmRebuild: false
 publish:
   provider: generic
   url: https://example.com/auto-updates
-electronDownload:
-  mirror: https://npmmirror.com/mirrors/electron/
+#electronDownload:
+#  mirror: https://npmmirror.com/mirrors/electron/

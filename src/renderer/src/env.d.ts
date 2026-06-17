@@ -11,6 +11,7 @@ interface ForjaAPI {
   onGameStatus: (cb: (status: string) => void) => () => void
   onGameClosed: (cb: () => void) => () => void
   minimizeWindow: () => void
+  quitApp: () => void
   toggleFullscreen: () => void
   logEvent: (type: string, gameId: string, gameTitle: string) => Promise<void>
   getGameStats: () => Promise<Record<string, number>>

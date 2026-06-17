@@ -18,7 +18,7 @@ export interface Game {
   title: string
   subtitle?: string
   description: string
-  genres: string[]
+  genre: string[]
   tags: string[]
   mode: 'singleplayer' | 'multiplayer' | 'coop'
   maxPlayers?: number

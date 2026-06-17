@@ -1,4 +1,4 @@
-import type { Game, ForjaHubData, GameMedia, GameCredit } from '../types/game'
+import type { Game, ForjaHubData, GameCredit } from '../types/game'
 
 function parseCsvRows(csvText: string): Record<string, string>[] {
   const lines = csvText.trim().split('\n')
@@ -50,7 +50,7 @@ function rowToGame(row: Record<string, string>): Game {
     title: row.title || '',
     subtitle: row.subtitle || undefined,
     description: row.description || '',
-    genres: splitField(row.genre),
+    genre: splitField(row.genre),
     tags: splitField(row.tags),
     mode: parseMode(row.mode),
     maxPlayers: row.maxPlayers ? parseInt(row.maxPlayers, 10) : undefined,

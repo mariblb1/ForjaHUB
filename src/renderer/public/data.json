@@ -7,7 +7,7 @@
       "title": "Exemplo de Jogo Foda",
       "subtitle": "Subtítulo do Jogo",
       "description": "Jogo Foda",
-      "genres": ["Ação", "Aventura"],
+      "genre": ["Ação", "Aventura"],
       "tags": ["2D", "Indie"],
       "mode": "singleplayer",
       "cover": "/assets/covers/jogo-foda.jpg",

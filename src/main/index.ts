@@ -16,10 +16,8 @@ function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     fullscreen: !isDev,
-    kiosk: !isDev, // trava no app, oculta taskbar
-    frame: false, // remove barra de título
+    frame: false,
     autoHideMenuBar: true,
-    alwaysOnTop: true, // opcional: impede popups do SO
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -219,6 +217,10 @@ ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string, gameId: string, gameTit
 ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {
   const win = BrowserWindow.getFocusedWindow()
   win?.minimize()
+})
+
+ipcMain.handle(IPC.QUIT_APP, () => {
+  app.quit()
 })
 
 ipcMain.handle(IPC.LOG_EVENT, (_event, type: string, gameId: string, gameTitle: string) => {

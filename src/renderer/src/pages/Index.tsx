@@ -6,7 +6,7 @@ import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
 import { Lightbox } from '@/components/Lightbox'
 import { GameModal } from '@/components/GameModal'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images, Download } from 'lucide-react'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images, Download, Minus, X } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -71,8 +71,8 @@ const GameCard = ({ game, onOpenGallery, onOpenModal }: { game: Game; onOpenGall
       {/* Info base */}
       <div className="p-4 space-y-2">
         <h3 className="font-display font-semibold text-foreground truncate">{game.title}</h3>
-        {game.genres && game.genres.length > 0 && (
-          <p className="text-xs text-muted-foreground truncate">{game.genres.join(' · ')}</p>
+        {game.genre && game.genre.length > 0 && (
+          <p className="text-xs text-muted-foreground truncate">{game.genre.join(' · ')}</p>
         )}
         <div className="flex items-center gap-1.5 text-xs text-primary">
           {modeIcon(game.mode)}
@@ -167,7 +167,7 @@ const Index = () => {
   const [lightbox, setLightbox] = useState<{ game: Game; index: number } | null>(null)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
 
-  const allGenres = Array.from(new Set(data?.games.flatMap((g) => g.genres ?? []) ?? []))
+  const allGenres = Array.from(new Set(data?.games.flatMap((g) => g.genre ?? []) ?? []))
   const allModes = ['singleplayer', 'multiplayer', 'coop']
 
   const toggleGenre = (genre: string) =>
@@ -183,7 +183,7 @@ const Index = () => {
   const filteredGames = data?.games.filter((g) => {
     const q = search.toLowerCase()
     const matchesSearch = g.title.toLowerCase().includes(q) || g.studio.toLowerCase().includes(q)
-    const matchesGenre = selectedGenres.length === 0 || selectedGenres.some((genre) => g.genres?.includes(genre))
+    const matchesGenre = selectedGenres.length === 0 || selectedGenres.some((genre) => g.genre?.includes(genre))
     const matchesMode = selectedModes.length === 0 || selectedModes.includes(g.mode)
     return matchesSearch && matchesGenre && matchesMode
   }) ?? []
@@ -296,6 +296,22 @@ const Index = () => {
           >
             {isFetching ? 'Atualizando...' : 'Atualizar Cache'}
           </Button>
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={() => window.forjaAPI?.minimizeWindow()}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-white/10"
+              title="Minimizar"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => window.forjaAPI?.quitApp()}
+              className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10"
+              title="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </header>
 
