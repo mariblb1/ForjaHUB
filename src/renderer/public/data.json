@@ -1,41 +1,5 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2024-06-01T12:00:00Z",
-  "games": [
-    {
-      "id": "Exemplo1",
-      "title": "Exemplo de Jogo Foda",
-      "subtitle": "Subtítulo do Jogo",
-      "description": "Jogo Foda",
-      "genre": ["Ação", "Aventura"],
-      "tags": ["2D", "Indie"],
-      "mode": "singleplayer",
-      "cover": "/assets/covers/jogo-foda.jpg",
-      "banner": "/assets/banners/exemplo-banner.jpg",
-      "gallery": [
-        { "type": "image", "url": "/assets/gallery/exemplo1.jpg", "caption": "Tela Inicial" },
-        {
-          "type": "video",
-          "url": "https://www.youtube-nocookie.com/embed/k5qLjkPREVU?autoplay=1",
-          "caption": "Trailer Oficial"
-        },
-        {
-          "type": "video",
-          "url": "/assets/gallery/trailer.mp4",
-          "caption": "Trailer Oficial"
-        }
-      ],
-      "studio": "Forja Games Studio",
-      "StudioLogo": "/assets/logos/forja-logo1.png",
-      "credits": [
-        { "role": "Desenvolvedor", "name": "Equipe Forja" },
-        { "role": "Designer", "name": "Designer Forja" }
-      ],
-      "launchType": "local",
-      "executablePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Gorogoa\\Gorogoa.exe",
-      "year": 2026,
-      "featured": true,
-      "sortOrder": 1
-    }
-  ]
+  "updatedAt": "2026-06-17T00:00:00Z",
+  "games": []
 }
