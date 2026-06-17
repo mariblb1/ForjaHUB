@@ -6,7 +6,7 @@ import forjaLogo from '@/assets/logos/forja-logo1.png'
 import { Button } from '@/components/ui/button'
 import { Lightbox } from '@/components/Lightbox'
 import { GameModal } from '@/components/GameModal'
-import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images, Download, Minus, X } from 'lucide-react'
+import { Gamepad2, Monitor, Wifi, WifiOff, Users, User, Swords, Search, Play, Globe, Loader2, Images, Download, Minus, Maximize2, X } from 'lucide-react'
 
 const modeIcon = (mode: Game['mode']) => {
   if (mode === 'multiplayer') return <Users className="h-4 w-4" />
@@ -303,6 +303,13 @@ const Index = () => {
               title="Minimizar"
             >
               <Minus className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => window.forjaAPI?.toggleFullscreen()}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-white/10"
+              title="Maximizar / Restaurar"
+            >
+              <Maximize2 className="h-4 w-4" />
             </button>
             <button
               onClick={() => window.forjaAPI?.quitApp()}
