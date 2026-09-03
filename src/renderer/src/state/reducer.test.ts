@@ -14,6 +14,7 @@ describe('reducer — set-mode', () => {
   it('troca o mode preservando errorPlate e controllerConnected', () => {
     const next = reducer(base, { type: 'set-mode', mode: 'operator' })
     expect(next).toEqual({ mode: 'operator', errorPlate: 'ALGO', controllerConnected: true })
+    expect(next).not.toBe(base)
   })
 
   it('mode igual ao atual é no-op (mesma referência)', () => {
@@ -31,6 +32,7 @@ describe('reducer — error-plate / controller não mexem no mode', () => {
   it('error-plate seta o código sem trocar o mode', () => {
     const next = reducer(base, { type: 'error-plate', code: 'EXE_FALHOU' })
     expect(next).toEqual({ mode: 'catalog', errorPlate: 'EXE_FALHOU', controllerConnected: true })
+    expect(next).not.toBe(base)
   })
 
   it('error-plate com null limpa a placa sem trocar o mode', () => {
@@ -38,9 +40,20 @@ describe('reducer — error-plate / controller não mexem no mode', () => {
     expect(next).toEqual({ mode: 'catalog', errorPlate: null, controllerConnected: true })
   })
 
+  it('error-plate com o mesmo código é no-op (mesma referência)', () => {
+    const next = reducer(base, { type: 'error-plate', code: 'ALGO' })
+    expect(next).toBe(base)
+  })
+
   it('controller alterna a flag sem trocar o mode', () => {
     const next = reducer(base, { type: 'controller', connected: false })
     expect(next).toEqual({ mode: 'catalog', errorPlate: 'ALGO', controllerConnected: false })
+    expect(next).not.toBe(base)
+  })
+
+  it('controller com o mesmo valor é no-op (mesma referência)', () => {
+    const next = reducer(base, { type: 'controller', connected: true })
+    expect(next).toBe(base)
   })
 })
 
