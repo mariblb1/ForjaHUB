@@ -1,8 +1,7 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+import type { ForjaAPI } from '@shared/forja-api'
 
 declare global {
   interface Window {
-    electron: ElectronAPI
-    api: unknown
+    forjaAPI: ForjaAPI
   }
 }
