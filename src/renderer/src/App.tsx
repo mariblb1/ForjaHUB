@@ -1,27 +1,41 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { HashRouter, Route, Routes } from 'react-router-dom'
-import { Toaster as Sonner } from '@/components/ui/sonner'
-import { Toaster } from '@/components/ui/toaster'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import Index from './pages/Index'
-import NotFound from './pages/NotFound'
+import { type JSX, useEffect, useReducer } from 'react'
+import { initialState, reducer } from './state/reducer'
 
-const queryClient = new QueryClient()
+/**
+ * Shell mínimo do Kiosk. Sem tela real: só exercita a máquina de
+ * estados e o caminho main→renderer via `forjaAPI`.
+ */
+export default function App(): JSX.Element {
+  const [state, dispatch] = useReducer(reducer, initialState)
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </HashRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-)
+  useEffect(() => {
+    let alive = true
 
-export default App
+    window.forjaAPI.hydrate().then((res) => {
+      if (alive && res.ok) dispatch({ type: 'set-mode', mode: res.mode })
+    })
+
+    // Ctrl+Shift+O → placeholder de Operador.
+    const off = window.forjaAPI.onOperatorOpen(() =>
+      dispatch({ type: 'set-mode', mode: 'operator' })
+    )
+
+    return () => {
+      alive = false
+      off()
+    }
+  }, [])
+
+  return (
+    <main className="flex h-full select-none flex-col items-center justify-center gap-2 text-[#f4e9e3]">
+      <p className="m-0 text-xs tracking-[0.3em] opacity-50">FORJA HUB</p>
+      <p className="m-0 text-3xl">
+        modo: <strong>{state.mode}</strong>
+      </p>
+      {state.errorPlate && <p className="m-0 text-[#e0483f]">erro: {state.errorPlate}</p>}
+      {!state.controllerConnected && (
+        <p className="m-0 text-sm opacity-50">controle desconectado</p>
+      )}
+    </main>
+  )
+}
