@@ -1,13 +1,11 @@
 import { join } from 'path'
 import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
-import type { Input } from 'electron'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { IPC } from '@shared/channels'
 import type { CommandResult, Mode } from '@shared/types'
+import { matchOperatorShortcut, type OperatorShortcut } from './shortcuts'
 
 let mainWindow: BrowserWindow | null = null
-
-type OperatorShortcut = 'quit' | 'toggle-fullscreen' | 'open-operator'
 
 function runOperatorShortcut(action: OperatorShortcut): void {
   switch (action) {
@@ -19,23 +17,10 @@ function runOperatorShortcut(action: OperatorShortcut): void {
       return
     case 'open-operator':
       // Status de tela real só na pós refactor.
-      mainWindow?.webContents.send(IPC.OPERATOR_OPEN)
+      if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.send(IPC.OPERATOR_OPEN)
+      }
       return
-  }
-}
-
-function matchOperatorShortcut(input: Input): OperatorShortcut | null {
-  if (input.type !== 'keyDown' || !input.shift) return null
-  if (!(input.control || input.meta)) return null
-  switch (input.key.toLowerCase()) {
-    case 'q':
-      return 'quit'
-    case 'm':
-      return 'toggle-fullscreen'
-    case 'o':
-      return 'open-operator'
-    default:
-      return null
   }
 }
 
@@ -50,17 +35,26 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: true,
+      webviewTag: false
     }
   })
 
-  mainWindow.on('ready-to-show', () => mainWindow?.show())
+  mainWindow.on('ready-to-show', () => {
+    mainWindow?.show()
+    // Foco explícito: sob Wayland um kiosk frameless nem sempre foca ao exibir, e
+    // sem foco a janela não recebe `before-input-event` (único caminho de atalho
+    // que funciona no meu PC (Hyprland/Linux)).
+    mainWindow?.focus()
+  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
 
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault())
+  mainWindow.webContents.on('will-redirect', (event) => event.preventDefault())
 
   // Fallback dos atalhos do Operador quando a janela do Hub está em foco.
   mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -68,6 +62,12 @@ function createWindow(): void {
     if (!action) return
     event.preventDefault()
     runOperatorShortcut(action)
+  })
+
+  // Recuperação mínima para operação não-assistida: renderer morto ⇒ recarrega.
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (details.reason === 'clean-exit') return
+    mainWindow?.webContents.reload()
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -79,11 +79,16 @@ function createWindow(): void {
 
 /** Registro dos atalhos no nível do SO, respondem mesmo com um Jogo em foco. */
 function registerGlobalShortcuts(): void {
-  globalShortcut.register('CommandOrControl+Shift+Q', () => runOperatorShortcut('quit'))
-  globalShortcut.register('CommandOrControl+Shift+M', () =>
-    runOperatorShortcut('toggle-fullscreen')
-  )
-  globalShortcut.register('CommandOrControl+Shift+O', () => runOperatorShortcut('open-operator'))
+  const bind = (accelerator: string, action: OperatorShortcut): void => {
+    const ok = globalShortcut.register(accelerator, () => {
+      if (mainWindow?.isFocused()) return
+      runOperatorShortcut(action)
+    })
+    if (!ok) console.warn(`[main] globalShortcut indisponível: ${accelerator}`)
+  }
+  bind('CommandOrControl+Shift+Q', 'quit')
+  bind('CommandOrControl+Shift+M', 'toggle-fullscreen')
+  bind('CommandOrControl+Shift+O', 'open-operator')
 }
 
 if (!app.requestSingleInstanceLock()) {
