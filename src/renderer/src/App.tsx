@@ -9,16 +9,28 @@ export default function App(): JSX.Element {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
+    const api = window.forjaAPI
+    if (!api) {
+      // Preload não injetou a ponte, mostra algo em vez de estourar TypeError.
+      dispatch({ type: 'error-plate', code: 'SEM_PONTE' })
+      return
+    }
+
     let alive = true
 
-    window.forjaAPI.hydrate().then((res) => {
-      if (alive && res.ok) dispatch({ type: 'set-mode', mode: res.mode })
-    })
+    api
+      .hydrate()
+      .then((res) => {
+        if (!alive) return
+        if (res.ok) dispatch({ type: 'set-mode', mode: res.mode })
+        else dispatch({ type: 'error-plate', code: res.code })
+      })
+      .catch(() => {
+        if (alive) dispatch({ type: 'error-plate', code: 'HYDRATE_FALHOU' })
+      })
 
     // Ctrl+Shift+O → placeholder de Operador.
-    const off = window.forjaAPI.onOperatorOpen(() =>
-      dispatch({ type: 'set-mode', mode: 'operator' })
-    )
+    const off = api.onOperatorOpen(() => dispatch({ type: 'set-mode', mode: 'operator' }))
 
     return () => {
       alive = false
