@@ -1,41 +1,75 @@
-import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
-import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs'
-import { spawn, exec } from 'child_process'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { ipcMain, shell } from 'electron'
-import { globalShortcut } from 'electron'
-import { IPC } from '../shared/channels'
-import { csvToForjaHubData } from '../services/csvParser'
-import * as path from 'path'
-//import icon from '../../resources/icon.png?asset'
+import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
+import type { Input } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { IPC } from '@shared/channels'
+import type { CommandResult, Mode } from '@shared/types'
+
+let mainWindow: BrowserWindow | null = null
+
+type OperatorShortcut = 'quit' | 'toggle-fullscreen' | 'open-operator'
+
+function runOperatorShortcut(action: OperatorShortcut): void {
+  switch (action) {
+    case 'quit':
+      app.quit()
+      return
+    case 'toggle-fullscreen':
+      mainWindow?.setFullScreen(!mainWindow.isFullScreen())
+      return
+    case 'open-operator':
+      // Status de tela real só na pós refactor.
+      mainWindow?.webContents.send(IPC.OPERATOR_OPEN)
+      return
+  }
+}
+
+function matchOperatorShortcut(input: Input): OperatorShortcut | null {
+  if (input.type !== 'keyDown' || !input.shift) return null
+  if (!(input.control || input.meta)) return null
+  switch (input.key.toLowerCase()) {
+    case 'q':
+      return 'quit'
+    case 'm':
+      return 'toggle-fullscreen'
+    case 'o':
+      return 'open-operator'
+    default:
+      return null
+  }
+}
 
 function createWindow(): void {
-  const isDev = process.env.NODE_ENV === 'development'
-
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    fullscreen: !isDev,
+  mainWindow = new BrowserWindow({
+    // Tela em modo KIOSK
+    fullscreen: true,
     frame: false,
     autoHideMenuBar: true,
+    show: false,
+    backgroundColor: '#140d0b',
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  mainWindow.on('ready-to-show', () => mainWindow?.show())
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault())
+
+  // Fallback dos atalhos do Operador quando a janela do Hub está em foco.
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    const action = matchOperatorShortcut(input)
+    if (!action) return
+    event.preventDefault()
+    runOperatorShortcut(action)
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -43,251 +77,48 @@ function createWindow(): void {
   }
 }
 
-///////////////////////////////////////
-//dadods
-ipcMain.handle(IPC.LOAD_GAMES, async () => {
-  return []
-})
+/** Registro dos atalhos no nível do SO, respondem mesmo com um Jogo em foco. */
+function registerGlobalShortcuts(): void {
+  globalShortcut.register('CommandOrControl+Shift+Q', () => runOperatorShortcut('quit'))
+  globalShortcut.register('CommandOrControl+Shift+M', () =>
+    runOperatorShortcut('toggle-fullscreen')
+  )
+  globalShortcut.register('CommandOrControl+Shift+O', () => runOperatorShortcut('open-operator'))
+}
 
-ipcMain.handle(IPC.REFRESH_CACHE, async () => {})
-//launcher
-ipcMain.handle(IPC.LAUNCH_URL, async (_event, url: string) => {
-  await shell.openExternal(url)
-})
-//sistema
-ipcMain.handle(IPC.TOGGLE_FULLSCREEN, async () => {
-  const win = BrowserWindow.getFocusedWindow()
-  win?.setFullScreen(!win.isFullScreen())
-})
-
-app.whenReady().then(() => {
-  globalShortcut.register('CommandOrControl+Shift+M', () => {
-    const win = BrowserWindow.getAllWindows()[0]
-    if (!win) return
-    if (win.isVisible()) {
-      win.minimize()
-    } else {
-      win.show()
-      win.focus()
-    }
-  })
-})
-
-app.whenReady().then(() => {
-  globalShortcut.register('CommandOrControl+Shift+Q', () => app.quit())
-})
-
-app.on('will-quit', () => globalShortcut.unregisterAll())
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  createWindow()
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-ipcMain.handle(IPC.SELECT_AND_LOAD_FILE, async () => {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Selecionar ficheiro de dados',
-    filters: [
-      { name: 'Dados', extensions: ['json', 'csv'] },
-      { name: 'JSON', extensions: ['json'] },
-      { name: 'CSV', extensions: ['csv'] }
-    ],
-    properties: ['openFile']
-  })
-
-  if (canceled || filePaths.length === 0) return null
-
-  const filePath = filePaths[0]
-  const text = readFileSync(filePath, 'utf-8')
-
-  if (filePath.endsWith('.csv')) {
-    return csvToForjaHubData(text)
-  }
-
-  return JSON.parse(text)
-})
-
-ipcMain.handle(IPC.PARSE_CSV, (_event, csvText: string) => {
-  return csvToForjaHubData(csvText)
-})
-
-ipcMain.handle(IPC.SAVE_CACHE, (_event, data: unknown) => {
-  const cachePath = path.join(app.getPath('userData'), 'data.json')
-  writeFileSync(cachePath, JSON.stringify(data, null, 2), 'utf-8')
-})
-
-ipcMain.handle(IPC.LOAD_CACHE, () => {
-  const cachePath = path.join(app.getPath('userData'), 'data.json')
-  if (!existsSync(cachePath)) return null
-  return JSON.parse(readFileSync(cachePath, 'utf-8'))
-})
-
-ipcMain.handle(IPC.LAUNCH_EXE, (_event, exePath: string, gameId: string, gameTitle: string) => {
-  const win = BrowserWindow.getAllWindows()[0]
-  const processName = path.basename(exePath)
-
-  const child = spawn(exePath, [], { detached: true, stdio: 'ignore' })
-  child.unref()
-
-  child.on('error', (err) => {
-    win?.show()
-    win?.focus()
-    win?.webContents.send(IPC.GAME_STATUS, 'error')
-    console.error('[launcher] erro ao abrir exe:', err.message)
-  })
-
-  child.on('spawn', () => {
-    const launchTime = Date.now()
-    win?.webContents.send(IPC.GAME_STATUS, 'running')
-    setTimeout(() => win?.hide(), 1500)
-
-    let gameEverRunning = false
-    let notFoundCount = 0
-
-    const poll = setInterval(() => {
-      exec(`tasklist /FI "IMAGENAME eq ${processName}" /NH`, (_err, stdout) => {
-        const running = stdout.toLowerCase().includes(processName.toLowerCase())
-
-        if (running) {
-          gameEverRunning = true
-          notFoundCount = 0
-        } else if (gameEverRunning) {
-          notFoundCount++
-          if (notFoundCount >= 2) {
-            clearInterval(poll)
-
-            const seconds = Math.round((Date.now() - launchTime) / 1000)
-            const h = String(Math.floor(seconds / 3600)).padStart(2, '0')
-            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')
-            const s = String(seconds % 60).padStart(2, '0')
-            const logPath = path.join(app.getPath('userData'), 'events.log')
-            appendFileSync(
-              logPath,
-              `${new Date().toISOString()} | session_end | ${gameId} | ${gameTitle} | ${h}:${m}:${s}\n`,
-              'utf-8'
-            )
-
-            win?.show()
-            win?.focus()
-            win?.webContents.send(IPC.GAME_CLOSED, null)
-            win?.webContents.send(IPC.GAME_STATUS, 'closed')
-          }
-        }
-      })
-    }, 3000)
-
-    // segurança: para o polling após 4 horas
-    setTimeout(() => clearInterval(poll), 4 * 60 * 60 * 1000)
-  })
-})
-
-ipcMain.handle(IPC.MINIMIZE_WINDOW, () => {
-  const win = BrowserWindow.getFocusedWindow()
-  win?.minimize()
-})
-
-ipcMain.handle(IPC.QUIT_APP, () => {
+if (!app.requestSingleInstanceLock()) {
   app.quit()
-})
-
-ipcMain.handle(IPC.LOG_EVENT, (_event, type: string, gameId: string, gameTitle: string) => {
-  const logPath = path.join(app.getPath('userData'), 'events.log')
-  const timestamp = new Date().toISOString()
-  const line = `${timestamp} | ${type} | ${gameId} | ${gameTitle}\n`
-  appendFileSync(logPath, line, 'utf-8')
-})
-
-ipcMain.handle(IPC.EXPORT_LOGS, async () => {
-  const logPath = path.join(app.getPath('userData'), 'events.log')
-  if (!existsSync(logPath)) return { success: false, reason: 'no_log' }
-
-  const lines = readFileSync(logPath, 'utf-8').split('\n').filter(Boolean)
-  const entries = lines.map((line) => {
-    const [timestamp, event, gameId, gameTitle, duration] = line.split(' | ').map((s) => s.trim())
-    return { timestamp, event, gameId, gameTitle, duration: duration ?? '' }
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
   })
 
-  const win = BrowserWindow.getAllWindows()[0]
-  win?.setAlwaysOnTop(false)
+  app.whenReady().then(() => {
+    electronApp.setAppUserModelId('com.forja.hub')
 
-  const { canceled, filePath } = await dialog.showSaveDialog(win, {
-    title: 'Exportar logs',
-    defaultPath: `forja-logs-${new Date().toISOString().slice(0, 10)}`,
-    filters: [
-      { name: 'CSV', extensions: ['csv'] },
-      { name: 'JSON', extensions: ['json'] }
-    ]
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+
+    // TODO: Handshake de boot devolve só o `mode` inicial nessa fase.
+    ipcMain.handle(
+      IPC.APP_HYDRATE,
+      (): CommandResult<{ mode: Mode }> => ({ ok: true, mode: 'boot' })
+    )
+
+    registerGlobalShortcuts()
+    createWindow()
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   })
 
-  win?.setAlwaysOnTop(true)
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 
-  if (canceled || !filePath) return { success: false, reason: 'canceled' }
-
-  if (filePath.endsWith('.json')) {
-    writeFileSync(filePath, JSON.stringify(entries, null, 2), 'utf-8')
-  } else {
-    const header = 'timestamp,event,game_id,game_title,duration\n'
-    const rows = entries.map((e) =>
-      [e.timestamp, e.event, e.gameId, e.gameTitle, e.duration]
-        .map((v) => `"${(v ?? '').replace(/"/g, '""')}"`)
-        .join(',')
-    ).join('\n')
-    writeFileSync(filePath, header + rows, 'utf-8')
-  }
-
-  return { success: true }
-})
-
-ipcMain.handle(IPC.GET_GAME_STATS, () => {
-  const logPath = path.join(app.getPath('userData'), 'events.log')
-  if (!existsSync(logPath)) return {}
-
-  const totals: Record<string, number> = {}
-  const lines = readFileSync(logPath, 'utf-8').split('\n').filter(Boolean)
-
-  for (const line of lines) {
-    const parts = line.split(' | ')
-    if (parts[1]?.trim() !== 'session_end') continue
-    const gameId = parts[2]?.trim()
-    const duration = parts[4]?.trim() // HH:MM:SS
-    if (!gameId || !duration) continue
-    const [h, m, s] = duration.split(':').map(Number)
-    if ([h, m, s].some(isNaN)) continue
-    totals[gameId] = (totals[gameId] ?? 0) + h * 3600 + m * 60 + s
-  }
-
-  return totals
-})
+  app.on('will-quit', () => globalShortcut.unregisterAll())
+}
