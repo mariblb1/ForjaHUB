@@ -1,25 +1,25 @@
+/**
+ * Mapa único de canais IPC — importado por `main` e `preload`.
+ * Ainda só liga `WINDOW_TOGGLE_FULLSCREEN`, `WINDOW_QUIT`, `OPERATOR_OPEN` e
+ * `APP_HYDRATE`. O restante entra como constante para fixar o contrato agora.
+ */
 export const IPC = {
-  // Dados
-  LOAD_GAMES: 'data:load-games',
-  REFRESH_CACHE: 'data:refresh-cache',
-  SELECT_AND_LOAD_FILE: 'data:select-and-load-file',
-  PARSE_CSV: 'data:parse-csv',
-  SAVE_CACHE: 'data:save-cache',
-  LOAD_CACHE: 'data:load-cache',
+  // Comandos renderer → main (ipcRenderer.invoke / ipcMain.handle)
+  APP_HYDRATE: 'app:hydrate',
+  CONFIG_ROSTER: 'config:roster',
+  WINDOW_TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
+  WINDOW_QUIT: 'window:quit',
+  OPERATOR_FORCE_SYNC: 'operator:force-sync',
+  OPERATOR_REOPEN_SETUP: 'operator:reopen-setup',
+  ANALYTICS_FLUSH: 'analytics:flush',
 
-  // Launcher
-  LAUNCH_EXE: 'launcher:run-exe',
-  LAUNCH_URL: 'launcher:open-url',
-  GAME_STATUS: 'launcher:game-status',
-  GAME_CLOSED: 'launcher:game-closed',
-
-  // Analytics
-  LOG_EVENT: 'analytics:log-event',
-  EXPORT_LOGS: 'analytics:export-logs',
-  GET_GAME_STATS: 'analytics:get-game-stats',
-
-  // Sistema
-  TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
-  MINIMIZE_WINDOW: 'window:minimize',
-  QUIT_APP: 'window:quit'
+  // Eventos main → renderer (webContents.send)
+  CATALOG_UPDATED: 'catalog:updated',
+  SYNC_RESULT: 'sync:result',
+  SYNC_BUILD_STATUS: 'sync:build-status',
+  GAME_STATUS: 'game:status',
+  CONTROLLER_STATUS: 'controller:status',
+  OPERATOR_OPEN: 'operator:open'
 } as const
+
+export type IpcChannel = (typeof IPC)[keyof typeof IPC]
