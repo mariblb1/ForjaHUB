@@ -21,8 +21,16 @@ export interface AnalyticsSink {
   flush(registros: RegistroAnalytics[]): Promise<{ idsAceitos: string[] }>
 }
 
+export type ExitInfo = { durationMs: number; code: number | null }
+
 export interface GameLauncher {
-  launch(exeAbs: string, opts?: { processoAlvo?: string }): Promise<'started' | 'exited' | 'error'>
+  launch(exeAbs: string, opts?: { processoAlvo?: string }): Promise<'started' | 'error'>
+  /**
+   * Assina o fim da Sessão de Jogo. Detecção primária: `child.on('exit')` do
+   * handle spawnado. Com `processoAlvo` (wrapper) troca para name-poll. Dispara no
+   * máximo uma vez por `launch`.
+   */
+  onExited(cb: (info: ExitInfo) => void): () => void
 }
 
 /* Persistência em `userData/` */
