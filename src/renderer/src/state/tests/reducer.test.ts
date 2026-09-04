@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KioskState, Mode } from '@shared/types'
-import { initialState, reducer, type Action } from './reducer'
+import { initialState, reducer, type Action } from '../reducer'
 
 const base: KioskState = { mode: 'catalog', errorPlate: 'ALGO', controllerConnected: true }
 
