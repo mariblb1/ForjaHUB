@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultProbe, run, sanitizeProcessName } from './process-probe'
+import { defaultProbe, run, sanitizeProcessName } from '../process-probe'
 
 const onLinux = process.platform !== 'win32'
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchOperatorShortcut } from './shortcuts'
+import { matchOperatorShortcut } from '../shortcuts'
 
 type Chord = Parameters<typeof matchOperatorShortcut>[0]
 

@@ -2,8 +2,8 @@ import { afterAll, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import type { ExitInfo } from '../ports'
-import { createGameLauncher } from './index'
+import type { ExitInfo } from '../../ports'
+import { createGameLauncher } from '../index'
 
 // C5: dev/teste é Linux; o ramo `processo_alvo` real (`tasklist`) e a calibração
 // dos números são Windows-shaped (Story 13). Aqui o `probe` é sempre fake.

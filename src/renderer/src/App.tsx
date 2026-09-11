@@ -1,12 +1,26 @@
-import { type JSX, useEffect, useReducer } from 'react'
+import { type JSX, useEffect, useReducer, useState } from 'react'
+import FocusHarness from './FocusHarness'
+import { shouldWarnDisconnected } from './input/connection'
+import { useCursorIdle } from './input/hooks/use-cursor-idle'
+import { useInputIntents } from './input/hooks/use-input-intents'
 import { initialState, reducer } from './state/reducer'
 
 /**
- * Shell mínimo do Kiosk. Sem tela real: só exercita a máquina de
- * estados e o caminho main→renderer via `forjaAPI`.
+ * Shell mínimo do Kiosk. Sem tela real: exercita a máquina de estados, o
+ * caminho main→renderer via `forjaAPI` e a camada de input sobre
+ * um harness de foco.
  */
 export default function App(): JSX.Element {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const [everConnected, setEverConnected] = useState(false)
+  const cursorVisible = useCursorIdle()
+
+  useInputIntents({
+    onConnectedChange: (connected) => {
+      dispatch({ type: 'controller', connected })
+      if (connected) setEverConnected(true)
+    }
+  })
 
   useEffect(() => {
     const api = window.forjaAPI
@@ -39,14 +53,24 @@ export default function App(): JSX.Element {
   }, [])
 
   return (
-    <main className="flex h-full select-none flex-col items-center justify-center gap-2 text-[#f4e9e3]">
-      <p className="m-0 text-xs tracking-[0.3em] opacity-50">FORJA HUB</p>
-      <p className="m-0 text-3xl">
-        modo: <strong>{state.mode}</strong>
-      </p>
-      {state.errorPlate && <p className="m-0 text-[#e0483f]">erro: {state.errorPlate}</p>}
-      {!state.controllerConnected && (
-        <p className="m-0 text-sm opacity-50">controle desconectado</p>
+    <main
+      className="flex h-full select-none flex-col items-center justify-center gap-6 text-[#f4e9e3]"
+      style={{ cursor: cursorVisible ? 'default' : 'none' }}
+    >
+      <div className="flex flex-col items-center gap-2">
+        <p className="m-0 text-xs tracking-[0.3em] opacity-50">FORJA HUB</p>
+        <p className="m-0 text-3xl">
+          modo: <strong>{state.mode}</strong>
+        </p>
+        {state.errorPlate && <p className="m-0 text-[#e0483f]">erro: {state.errorPlate}</p>}
+      </div>
+
+      <FocusHarness />
+
+      {shouldWarnDisconnected(everConnected, state.controllerConnected) && (
+        <p className="m-0 text-sm opacity-50">
+          Controle desconectado — reconecte ou use o teclado.
+        </p>
       )}
     </main>
   )
